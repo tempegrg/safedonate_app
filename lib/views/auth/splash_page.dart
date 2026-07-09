@@ -2,122 +2,114 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config/app_theme.dart';
-
+import '../../services/auth_service.dart';
+import '../../services/session_service.dart';
+import '../auth/login_page.dart';
 import '../admin/dashboard_page.dart';
 import '../user/dashboard_page.dart';
-import 'login_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() =>
-      _SplashPageState();
+  State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState
-    extends State<SplashPage> {
-
+class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    checkLogin();
+    _startApp();
   }
 
- Future<void> checkLogin() async {
+  Future<void> _startApp() async {
+    await Future.delayed(const Duration(seconds: 2));
 
-  await Future.delayed(
-    const Duration(seconds: 4),
-  );
+    final prefs = await SharedPreferences.getInstance();
 
-  if (!mounted) return;
+    final bool isLoggedIn = prefs.getBool('is_logged_in') ?? false;
+    final String role = prefs.getString('role') ?? '';
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const LoginPage(),
-    ),
-  );
-}
+    if (!isLoggedIn) {
+      _goToLogin();
+      return;
+    }
+
+    final expired = await SessionService.isSessionExpired();
+
+    if (expired) {
+      await AuthService.logout();
+      _goToLogin();
+      return;
+    }
+
+    // Session still valid → refresh last active time
+    await SessionService.updateLastActiveTime();
+
+    if (!mounted) return;
+
+    if (role.toLowerCase() == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const AdminDashboardPage(),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const UserDashboardPage(),
+        ),
+      );
+    }
+  }
+
+  void _goToLogin() {
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LoginPage(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
-      backgroundColor:
-          const Color(0xFFF5F7FA),
-
+      backgroundColor: AppTheme.primaryColor,
       body: Center(
-
         child: Column(
-
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
-            // App Logo
-            Container(
-
-              padding:
-                  const EdgeInsets.all(20),
-
-              decoration: BoxDecoration(
-
-                color:
-                    AppTheme.primaryColor.withOpacity(0.15),
-
-                shape: BoxShape.circle,
-              ),
-
-              child: const Icon(
-
-                Icons.verified_user,
-
-                size: 70,
-
-                color: AppTheme.primaryColor,
-              ),
+            Image.asset(
+              'assets/images/safedonate-logo.png',
+              width: 120,
+              height: 120,
             ),
-
-            const SizedBox(height: 25),
-
-            // App Name
-            Text(
-
-              "SafeDonate",
-
-              style: TextStyle(
-
-                fontSize: 32,
-
-                fontWeight:
-                    FontWeight.bold,
-
-                color: AppTheme.primaryColor,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Tagline
+            const SizedBox(height: 20),
             const Text(
-
-              "Verify Before You Donate",
-
+              'SafeDonate',
               style: TextStyle(
-
-                fontSize: 16,
-
-                color: Colors.black54,
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
-
-            const SizedBox(height: 40),
-
-            CircularProgressIndicator(
-              color: AppTheme.primaryColor,
+            const SizedBox(height: 10),
+            const Text(
+              'Secure your donations with confidence',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 30),
+            const CircularProgressIndicator(
+              color: Colors.white,
             ),
           ],
         ),

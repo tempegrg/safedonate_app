@@ -19,7 +19,6 @@ import '../../config/app_theme.dart';
 // =========================================
 
 class LoginPage extends StatefulWidget {
-
   const LoginPage({super.key});
 
   @override
@@ -29,7 +28,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState
     extends State<LoginPage> {
-
   // =========================================
   // CONTROLLERS
   // =========================================
@@ -50,20 +48,16 @@ class _LoginPageState
 
   bool obscurePassword = true;
 
-
   // =========================================
   // NORMAL LOGIN
   // =========================================
 
   void login() async {
-
     // Validate empty fields
     if (emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
-
       ScaffoldMessenger.of(context)
           .showSnackBar(
-
         const SnackBar(
           content:
               Text("Please fill all fields"),
@@ -79,58 +73,34 @@ class _LoginPageState
     });
 
     try {
-
-      // =========================================
-      // CALL LOGIN API
-      // =========================================
-
       var result =
           await AuthService.login(
-
         emailController.text.trim(),
-
         passwordController.text.trim(),
       );
 
-      // Stop loading
       setState(() {
         isLoading = false;
       });
 
-      // =========================================
-      // CHECK LOGIN RESPONSE
-      // =========================================
-
       if (result != null &&
           result['user'] != null) {
-
-        // Get role from backend
         var role =
             result['user']['role'];
 
-        // =========================================
         // ADMIN LOGIN
-        // =========================================
-
         if (selectedRole == 'admin') {
-
           if (role == 'admin') {
-
             Navigator.pushReplacement(
-
               context,
-
               MaterialPageRoute(
                 builder: (_) =>
                     const AdminDashboardPage(),
               ),
             );
-
           } else {
-
             ScaffoldMessenger.of(context)
                 .showSnackBar(
-
               const SnackBar(
                 content: Text(
                   "You are not registered as admin",
@@ -140,29 +110,19 @@ class _LoginPageState
           }
         }
 
-        // =========================================
         // USER LOGIN
-        // =========================================
-
         else {
-
           if (role == 'user') {
-
             Navigator.pushReplacement(
-
               context,
-
               MaterialPageRoute(
                 builder: (_) =>
                     const UserDashboardPage(),
               ),
             );
-
           } else {
-
             ScaffoldMessenger.of(context)
                 .showSnackBar(
-
               const SnackBar(
                 content: Text(
                   "Admin account cannot login as user",
@@ -171,12 +131,9 @@ class _LoginPageState
             );
           }
         }
-
       } else {
-
         ScaffoldMessenger.of(context)
             .showSnackBar(
-
           const SnackBar(
             content: Text(
               "Invalid email or password",
@@ -184,17 +141,13 @@ class _LoginPageState
           ),
         );
       }
-
     } catch (e) {
-
-      // Stop loading
       setState(() {
         isLoading = false;
       });
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-
         const SnackBar(
           content:
               Text("Something went wrong"),
@@ -203,93 +156,95 @@ class _LoginPageState
     }
   }
 
-// =========================================
-// BIOMETRIC LOGIN
-// =========================================
+  // =========================================
+  // BIOMETRIC LOGIN
+  // =========================================
 
-Future<void> biometricLogin() async {
+  Future<void> biometricLogin() async {
+    final bool available =
+        await BiometricService
+            .isBiometricAvailable();
 
-  bool authenticated =
-      await BiometricService.authenticate();
+    if (!available) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Biometric authentication is not available on this device",
+          ),
+        ),
+      );
+      return;
+    }
 
-  if (!authenticated) {
+    bool authenticated =
+        await BiometricService
+            .authenticate();
+
+    if (!authenticated) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Biometric authentication failed",
+          ),
+        ),
+      );
+      return;
+    }
+
+    final prefs =
+        await SharedPreferences
+            .getInstance();
+
+    bool hasLoggedInBefore =
+        prefs.getBool(
+              'hasLoggedInBefore',
+            ) ??
+            false;
+
+    String role =
+        prefs.getString('role') ?? '';
+
+    if (!hasLoggedInBefore) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Please login once before using biometric login",
+          ),
+        ),
+      );
+      return;
+    }
 
     ScaffoldMessenger.of(context)
         .showSnackBar(
-
       const SnackBar(
         content: Text(
-          "Biometric authentication failed",
+          "Biometric login successful",
         ),
       ),
     );
 
-    return;
-  }
-
-  final prefs =
-      await SharedPreferences.getInstance();
-
-  bool isLoggedIn =
-      prefs.getBool('isLoggedIn') ?? false;
-
-  String role =
-      prefs.getString('role') ?? '';
-
-  if (!isLoggedIn) {
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-
-      const SnackBar(
-        content: Text(
-          "Please login once before using fingerprint login",
+    if (role == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              const AdminDashboardPage(),
         ),
-      ),
-    );
-
-    return;
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              const UserDashboardPage(),
+        ),
+      );
+    }
   }
-
-  ScaffoldMessenger.of(context)
-      .showSnackBar(
-
-    const SnackBar(
-      content: Text(
-        "Biometric login successful",
-      ),
-    ),
-  );
-
-  // ADMIN
-  if (role == 'admin') {
-
-    Navigator.pushReplacement(
-
-      context,
-
-      MaterialPageRoute(
-        builder: (_) =>
-            const AdminDashboardPage(),
-      ),
-    );
-
-  }
-
-  // USER
-  else {
-
-    Navigator.pushReplacement(
-
-      context,
-
-      MaterialPageRoute(
-        builder: (_) =>
-            const UserDashboardPage(),
-      ),
-    );
-  }
-}
 
   // =========================================
   // UI
@@ -297,387 +252,571 @@ Future<void> biometricLogin() async {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       backgroundColor:
           const Color(0xFFF5F7FA),
 
       body: SafeArea(
-
-        child: SingleChildScrollView(
-
-          child: Padding(
-
-            padding:
-                const EdgeInsets.all(24),
-
-            child: Column(
-
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
-              children: [
-
-                const SizedBox(height: 30),
-
-                // =========================================
-                // APP TITLE
-                // =========================================
-
-                const Text(
-
-                  "SafeDonate",
-
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight:
-                        FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                const Text(
-
-                  "Secure your donations with confidence.",
-
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.black54,
-                  ),
-                ),
-
-                const SizedBox(height: 50),
-
-                // =========================================
-                // LOGIN TITLE
-                // =========================================
-
-                const Text(
-
-                  "Login",
-
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // =========================================
-                // EMAIL FIELD
-                // =========================================
-
-                TextField(
-
-                  controller:
-                      emailController,
-
-                  decoration: InputDecoration(
-
-                    hintText:
-                        "Email Address",
-
-                    prefixIcon:
-                        const Icon(
-                      Icons.email_outlined,
-                    ),
-
-                    filled: true,
-
-                    fillColor:
-                        Colors.white,
-
-                    border:
-                        OutlineInputBorder(
-
-                      borderRadius:
-                          BorderRadius.circular(
-                        14,
-                      ),
-
-                      borderSide:
-                          BorderSide.none,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // =========================================
-                // PASSWORD FIELD
-                // =========================================
-
-                TextField(
-
-                controller: passwordController,
-
-                obscureText: obscurePassword,
-
-                decoration: InputDecoration(
-
-                  hintText: "Password",
-
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                  ),
-
-                  suffixIcon: IconButton(
-
-                    icon: Icon(
-
-                      obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-
-                    ),
-
-                    onPressed: () {
-
-                      setState(() {
-
-                        obscurePassword = !obscurePassword;
-
-                      });
-
-                    },
-
-                  ),
-
-                  filled: true,
-
-                  fillColor: Colors.white,
-
-                  border: OutlineInputBorder(
-
-                    borderRadius: BorderRadius.circular(14),
-
-                    borderSide: BorderSide.none,
-
-                  ),
-
-                ),
-
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior
+                      .onDrag,
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
               ),
-
-                const SizedBox(height: 20),
-
-                // =========================================
-                // ROLE SELECTION
-                // =========================================
-
-                Row(
-
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-
-                  children: [
-
-                    // USER
-                    Row(
-                      children: [
-
-                        Radio(
-                          
-                            activeColor:
-                                AppTheme.primaryColor,
-
-                          value: 'user',
-
-                          groupValue:
-                              selectedRole,
-
-                          onChanged: (value) {
-
-                            setState(() {
-                              selectedRole =
-                                  value!;
-                            });
-                          },
-                        ),
-
-                        const Text("User"),
-                      ],
-                    ),
-
-                    // ADMIN
-                    Row(
-                      children: [
-
-                        Radio(
-
-                          activeColor:
-                          AppTheme.primaryColor,
-
-                          value: 'admin',
-
-                          groupValue:
-                              selectedRole,
-
-                          onChanged: (value) {
-
-                            setState(() {
-                              selectedRole =
-                                  value!;
-                            });
-                          },
-                        ),
-
-                        const Text("Admin"),
-                      ],
-                    ),
-                  ],
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      constraints.maxHeight - 48,
                 ),
-
-                const SizedBox(height: 25),
-
-                // =========================================
-                // LOGIN BUTTON
-                // =========================================
-
-                SizedBox(
-
-                  width: double.infinity,
-
-                  height: 55,
-
-                  child: ElevatedButton(
-
-                    onPressed:
-                        isLoading
-                            ? null
-                            : login,
-
-                    style:
-                        ElevatedButton.styleFrom(
-
-                      backgroundColor:
-                          AppTheme.primaryColor,
-
-                      shape:
-                          RoundedRectangleBorder(
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          14,
-                        ),
-                      ),
-                    ),
-
-                    child: isLoading
-
-                        ? const CircularProgressIndicator(
-                            color:
-                                Colors.white,
-                          )
-
-                        : const Text(
-
-                            "Login",
-
-                            style: TextStyle(
-                              fontSize: 18,
-                              color:
-                                  Colors.white,
-                            ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
+                    children: [
+                      // =========================================
+                      // LOGO
+                      // =========================================
+              
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                  ),
-                ),
+                          child: Image.asset(
+                            'assets/images/safedonate-logo.png',
+                            height: 95,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.verified_user,
+                                size: 95,
+                                color: AppTheme.primaryColor,
+                              );
+                            },
+                          ),
+                        ),
 
-                const SizedBox(height: 18),
+                        const SizedBox(height: 22),
 
-                // =========================================
-                // BIOMETRIC BUTTON
-                // =========================================
-
-                SizedBox(
-
-                  width: double.infinity,
-
-                  height: 55,
-
-                  child: OutlinedButton.icon(
-
-                    onPressed:
-                        biometricLogin,
-
-                    icon: const Icon(
-                      Icons.fingerprint,
-                    ),
-
-                    label: const Text(
-
-                      "Login with Fingerprint",
-
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-
-                    style:
-                        OutlinedButton.styleFrom(
-                      
-                      foregroundColor:
-                        AppTheme.primaryColor,
-                      
-                      side: BorderSide(
-                        color:
-                            AppTheme.primaryColor,
-                      ),
-
-                      shape:
-                          RoundedRectangleBorder(
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          14,
+                      // =========================================
+                      // APP NAME
+                      // =========================================
+                      const Text(
+                        "SafeDonate",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 34,
+                          fontWeight:
+                              FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color:
+                              AppTheme.primaryColor,
+                          height: 1.1,
                         ),
                       ),
-                    ),
-                  ),
-                ),
 
-                const SizedBox(height: 18),
+                      const SizedBox(height: 10),
 
-                // =========================================
-                // REGISTER BUTTON
-                // =========================================
-
-                Center(
-
-                  child: TextButton(
-
-                    onPressed: () {
-
-                      Navigator.push(
-
-                        context,
-
-                        MaterialPageRoute(
-
-                          builder: (_) =>
-                              const RegisterPage(),
+                      const Text(
+                        "Secure your donations with confidence.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.black54,
+                          height: 1.5,
                         ),
-                      );
-                    },
-
-                    child: const Text(
-
-                      "Don't have an account? Register",
-
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
                       ),
-                    ),
+
+                      const SizedBox(height: 30),
+
+                      // =========================================
+                      // LOGIN CARD
+                      // =========================================
+                      Container(
+                        width: double.infinity,
+                        padding:
+                            const EdgeInsets.all(
+                          22,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius:
+                              BorderRadius.circular(
+                            24,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color:
+                                  Colors.black12,
+                              blurRadius: 10,
+                              offset:
+                                  Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+                          children: [
+                            const Text(
+                              "Login",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight:
+                                    FontWeight
+                                        .bold,
+                                color:
+                                    Colors.black87,
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 6),
+
+                            const Text(
+                              "Access your SafeDonate account",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color:
+                                    Colors.black54,
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 24),
+
+                            // =========================================
+                            // EMAIL FIELD
+                            // =========================================
+                            TextField(
+                              controller:
+                                  emailController,
+                              keyboardType:
+                                  TextInputType
+                                      .emailAddress,
+                              decoration:
+                                  InputDecoration(
+                                hintText:
+                                    "Email Address",
+                                prefixIcon:
+                                    const Icon(
+                                  Icons
+                                      .email_outlined,
+                                ),
+                                filled: true,
+                                fillColor:
+                                    const Color(
+                                  0xFFF7F8FA,
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(
+                                  horizontal:
+                                      16,
+                                  vertical: 18,
+                                ),
+                                border:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    16,
+                                  ),
+                                  borderSide:
+                                      BorderSide
+                                          .none,
+                                ),
+                                enabledBorder:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    16,
+                                  ),
+                                  borderSide:
+                                      BorderSide
+                                          .none,
+                                ),
+                                focusedBorder:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    16,
+                                  ),
+                                  borderSide:
+                                      const BorderSide(
+                                    color: AppTheme
+                                        .primaryColor,
+                                    width: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 16),
+
+                            // =========================================
+                            // PASSWORD FIELD
+                            // =========================================
+                            TextField(
+                              controller:
+                                  passwordController,
+                              obscureText:
+                                  obscurePassword,
+                              decoration:
+                                  InputDecoration(
+                                hintText:
+                                    "Password",
+                                prefixIcon:
+                                    const Icon(
+                                  Icons
+                                      .lock_outline,
+                                ),
+                                suffixIcon:
+                                    IconButton(
+                                  icon: Icon(
+                                    obscurePassword
+                                        ? Icons
+                                            .visibility_off
+                                        : Icons
+                                            .visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      obscurePassword =
+                                          !obscurePassword;
+                                    });
+                                  },
+                                ),
+                                filled: true,
+                                fillColor:
+                                    const Color(
+                                  0xFFF7F8FA,
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(
+                                  horizontal:
+                                      16,
+                                  vertical: 18,
+                                ),
+                                border:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    16,
+                                  ),
+                                  borderSide:
+                                      BorderSide
+                                          .none,
+                                ),
+                                enabledBorder:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    16,
+                                  ),
+                                  borderSide:
+                                      BorderSide
+                                          .none,
+                                ),
+                                focusedBorder:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    16,
+                                  ),
+                                  borderSide:
+                                      const BorderSide(
+                                    color: AppTheme
+                                        .primaryColor,
+                                    width: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 22),
+
+                            // =========================================
+                            // ROLE SELECTION
+                            // =========================================
+                            Container(
+                              width:
+                                  double.infinity,
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration:
+                                  BoxDecoration(
+                                color:
+                                    const Color(
+                                  0xFFF7F8FA,
+                                ),
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                  16,
+                                ),
+                              ),
+                              child: Wrap(
+                                alignment:
+                                    WrapAlignment
+                                        .center,
+                                crossAxisAlignment:
+                                    WrapCrossAlignment
+                                        .center,
+                                spacing: 10,
+                                runSpacing: 4,
+                                children: [
+                                  Row(
+                                    mainAxisSize:
+                                        MainAxisSize
+                                            .min,
+                                    children: [
+                                      Radio(
+                                        activeColor:
+                                            AppTheme
+                                                .primaryColor,
+                                        value:
+                                            'user',
+                                        groupValue:
+                                            selectedRole,
+                                        onChanged:
+                                            (value) {
+                                          setState(
+                                              () {
+                                            selectedRole =
+                                                value!;
+                                          });
+                                        },
+                                      ),
+                                      const Text(
+                                        "User",
+                                        style:
+                                            TextStyle(
+                                          fontWeight:
+                                              FontWeight
+                                                  .w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisSize:
+                                        MainAxisSize
+                                            .min,
+                                    children: [
+                                      Radio(
+                                        activeColor:
+                                            AppTheme
+                                                .primaryColor,
+                                        value:
+                                            'admin',
+                                        groupValue:
+                                            selectedRole,
+                                        onChanged:
+                                            (value) {
+                                          setState(
+                                              () {
+                                            selectedRole =
+                                                value!;
+                                          });
+                                        },
+                                      ),
+                                      const Text(
+                                        "Admin",
+                                        style:
+                                            TextStyle(
+                                          fontWeight:
+                                              FontWeight
+                                                  .w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 24),
+
+                            // =========================================
+                            // LOGIN BUTTON
+                            // =========================================
+                            SizedBox(
+                              width:
+                                  double.infinity,
+                              height: 55,
+                              child:
+                                  ElevatedButton(
+                                onPressed:
+                                    isLoading
+                                        ? null
+                                        : login,
+                                style:
+                                    ElevatedButton
+                                        .styleFrom(
+                                  backgroundColor:
+                                      AppTheme
+                                          .primaryColor,
+                                  foregroundColor:
+                                      Colors.white,
+                                  elevation: 0,
+                                  shape:
+                                      RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius
+                                            .circular(
+                                      16,
+                                    ),
+                                  ),
+                                ),
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width:
+                                            22,
+                                        height:
+                                            22,
+                                        child:
+                                            CircularProgressIndicator(
+                                          color:
+                                              Colors.white,
+                                          strokeWidth:
+                                              2.5,
+                                        ),
+                                      )
+                                    : const Text(
+                                        "Login",
+                                        style:
+                                            TextStyle(
+                                          fontSize:
+                                              17,
+                                          fontWeight:
+                                              FontWeight
+                                                  .bold,
+                                        ),
+                                      ),
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 14),
+
+                            // =========================================
+                            // BIOMETRIC BUTTON
+                            // =========================================
+                            SizedBox(
+                              width:
+                                  double.infinity,
+                              height: 55,
+                              child:
+                                  OutlinedButton.icon(
+                                onPressed:
+                                    biometricLogin,
+                                icon: const Icon(
+                                  Icons
+                                      .fingerprint,
+                                ),
+                                label: const Text(
+                                  "Login with Biometric",
+                                  style:
+                                      TextStyle(
+                                    fontSize:
+                                        16,
+                                    fontWeight:
+                                        FontWeight
+                                            .w600,
+                                  ),
+                                ),
+                                style:
+                                    OutlinedButton
+                                        .styleFrom(
+                                  foregroundColor:
+                                      AppTheme
+                                          .primaryColor,
+                                  side:
+                                      const BorderSide(
+                                    color: AppTheme
+                                        .primaryColor,
+                                  ),
+                                  shape:
+                                      RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius
+                                            .circular(
+                                      16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(
+                                height: 18),
+
+                            // =========================================
+                            // REGISTER BUTTON
+                            // =========================================
+                            Center(
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) =>
+                                              const RegisterPage(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  "Don't have an account? Register",
+                                  textAlign:
+                                      TextAlign
+                                          .center,
+                                  style: TextStyle(
+                                    color: AppTheme
+                                        .primaryColor,
+                                    fontWeight:
+                                        FontWeight
+                                            .w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

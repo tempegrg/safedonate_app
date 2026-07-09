@@ -1,41 +1,53 @@
+import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 class BiometricService {
+  static final LocalAuthentication auth = LocalAuthentication();
 
-  static final LocalAuthentication auth =
-      LocalAuthentication();
-
-  static Future<bool> authenticate() async {
-
+  // Check whether biometric authentication is available
+  static Future<bool> isBiometricAvailable() async {
     try {
+      final bool isDeviceSupported = await auth.isDeviceSupported();
+      final bool canCheckBiometrics = await auth.canCheckBiometrics;
+      final List<BiometricType> availableBiometrics =
+          await auth.getAvailableBiometrics();
 
-      bool canCheck =
-          await auth.canCheckBiometrics;
+      print("isDeviceSupported: $isDeviceSupported");
+      print("canCheckBiometrics: $canCheckBiometrics");
+      print("availableBiometrics: $availableBiometrics");
 
-      bool isSupported =
-          await auth.isDeviceSupported();
+      return isDeviceSupported &&
+          canCheckBiometrics &&
+          availableBiometrics.isNotEmpty;
+    } on PlatformException catch (e) {
+      print("Biometric availability error: $e");
+      return false;
+    }
+  }
 
-      if (!canCheck || !isSupported) {
+  // Authenticate using biometric
+  static Future<bool> authenticate() async {
+    try {
+      final bool available = await isBiometricAvailable();
+
+      if (!available) {
+        print("Biometric not available or not enrolled");
         return false;
       }
 
-      bool authenticated =
-          await auth.authenticate(
-
-        localizedReason:
-            'Authenticate to access SafeDonate',
-
+      final bool authenticated = await auth.authenticate(
+        localizedReason: 'Authenticate to access SafeDonate',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
+          useErrorDialogs: true,
         ),
       );
 
+      print("Authenticated result: $authenticated");
       return authenticated;
-
-    } catch (e) {
-
-      print(e);
+    } on PlatformException catch (e) {
+      print("Authentication error: $e");
       return false;
     }
   }

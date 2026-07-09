@@ -4,10 +4,15 @@ import 'scan_qr_page.dart';
 import '../../config/app_theme.dart';
 
 class VerifyLinkPage extends StatefulWidget {
-  const VerifyLinkPage({super.key});
+  final String? scannedUrl;
+
+  const VerifyLinkPage({
+    super.key,
+    this.scannedUrl,
+  });
 
   @override
- State<VerifyLinkPage> createState() => _VerifyLinkPageState();
+  State<VerifyLinkPage> createState() => _VerifyLinkPageState();
 }
 
 class _VerifyLinkPageState extends State<VerifyLinkPage> {
@@ -22,6 +27,17 @@ class _VerifyLinkPageState extends State<VerifyLinkPage> {
 
   // Loading
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Auto-fill if page opened from QR scanner
+    if (widget.scannedUrl != null &&
+        widget.scannedUrl!.trim().isNotEmpty) {
+      urlController.text = widget.scannedUrl!.trim();
+    }
+  }
 
   // =========================================
   // VERIFY FUNCTION
@@ -72,12 +88,30 @@ class _VerifyLinkPageState extends State<VerifyLinkPage> {
   // SCAN QR CODE
   // =========================================
   Future<void> scanQRCode() async {
-    await Navigator.push(
+    final scannedUrl = await Navigator.push<String>(
       context,
       MaterialPageRoute(
         builder: (_) => const ScanQrPage(),
       ),
     );
+
+    if (scannedUrl != null && scannedUrl.trim().isNotEmpty) {
+      setState(() {
+        urlController.text = scannedUrl.trim();
+
+        // reset previous result if user scans a new QR
+        result = "";
+        organisationName = "";
+        status = "";
+        securityStatus = "";
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("QR link scanned successfully"),
+        ),
+      );
+    }
   }
 
   // =========================================
