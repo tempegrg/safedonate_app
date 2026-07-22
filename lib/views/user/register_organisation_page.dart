@@ -621,7 +621,7 @@ class _RegisterOrganisationPageState
             const Padding(
               padding: EdgeInsets.only(top: 10),
               child: Text(
-                "Tip: After selecting the logo, you can crop and adjust it to fit inside the frame.",
+                "Tip: After selecting the logo, you can crop and adjust it to fit inside the frame.(Max. Size: 2048 KB)",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.black54,
@@ -985,7 +985,7 @@ class _RegisterOrganisationPageState
                             });
                           },
                           helperText:
-                              "Accepted format: PDF only.",
+                              "Accepted format: PDF only. (Max. Size: 4096 KB)",
                           iconColor: Colors.red,
                         ),
                         buildUploadCard(
@@ -1002,7 +1002,7 @@ class _RegisterOrganisationPageState
                             });
                           },
                           helperText:
-                              "Accepted format: PDF only.",
+                              "Accepted format: PDF only.(Max.Size: 4096 KB)",
                         ),
                       ],
                     ),

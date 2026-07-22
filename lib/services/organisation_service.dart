@@ -78,6 +78,9 @@ class OrganisationService {
         },
       );
 
+      print("DELETE STATUS: ${response.statusCode}");
+      print("DELETE BODY: ${response.body}");
+
       return response.statusCode == 200;
     } catch (e) {
       print("DELETE ERROR: $e");

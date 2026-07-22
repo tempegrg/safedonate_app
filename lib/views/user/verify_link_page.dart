@@ -126,7 +126,7 @@ class _VerifyLinkPageState extends State<VerifyLinkPage> {
       case "danger":
         return "Potential malicious or suspicious activity was detected for this website link. Do not proceed until it is verified.";
       default:
-        return "The website security scan could not be completed at this time, or no scan result is available.";
+        return "VirusTotal does not currently have sufficient reputation information for this website. The website may be new or has not yet been analysed.";
     }
   }
 

@@ -7,6 +7,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../config/app_theme.dart';
 import '../../services/organisation_application_admin_service.dart';
 
+import 'package:image_cropper/image_cropper.dart';
+import 'package:flutter/services.dart';
+
 class OrganisationApplicationDetailPage extends StatefulWidget {
   final int applicationId;
 
@@ -105,6 +108,42 @@ class _OrganisationApplicationDetailPageState
     }
 
     return null;
+  }
+
+  // =========================================
+  // PICK & CROP LOGO
+  // =========================================
+  Future<File?> pickAndCropLogo() async {
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png'],
+      allowMultiple: false,
+    );
+
+    if (result == null || result.files.single.path == null) {
+      return null;
+    }
+
+    final croppedImage = await ImageCropper().cropImage(
+      sourcePath: result.files.single.path!,
+      compressQuality: 90,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop Logo',
+          toolbarColor: AppTheme.primaryColor,
+          toolbarWidgetColor: Colors.white,
+          hideBottomControls: false,
+          lockAspectRatio: false,
+        ),
+      ],
+    );
+
+    if (croppedImage == null) {
+      return null;
+    }
+
+    return File(croppedImage.path);
   }
 
   // =========================================
@@ -430,9 +469,8 @@ class _OrganisationApplicationDetailPageState
                         placeholder: "Change Logo (optional)",
                         file: selectedLogoFile,
                         onChoose: () async {
-                          final file = await pickSingleFile(
-                            allowedExtensions: ['jpg', 'jpeg', 'png'],
-                          );
+                          final file = await pickAndCropLogo();
+
                           if (file != null) {
                             setDialogState(() {
                               selectedLogoFile = file;
@@ -574,7 +612,11 @@ class _OrganisationApplicationDetailPageState
     );
   }
 
-  Widget buildInfoTile(String title, dynamic value) {
+  Widget buildInfoTile(
+    String title,
+    dynamic value, {
+    bool canCopy = true,
+  }) {
     final displayValue =
         value?.toString().trim().isNotEmpty == true
             ? value.toString()
@@ -594,12 +636,41 @@ class _OrganisationApplicationDetailPageState
               ),
             ),
           ),
+
           Expanded(
-            child: Text(
+            child: SelectableText(
               displayValue,
-              style: const TextStyle(height: 1.4),
+              style: const TextStyle(
+                height: 1.4,
+              ),
             ),
           ),
+
+          if (canCopy)
+            IconButton(
+              tooltip: "Copy",
+              icon: const Icon(
+                Icons.copy_rounded,
+                size: 18,
+                color: Colors.grey,
+              ),
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: displayValue),
+                );
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Copied to clipboard"),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -850,8 +921,16 @@ class _OrganisationApplicationDetailPageState
                 title: "Applicant Information",
                 child: Column(
                   children: [
-                    buildInfoTile("Submitted By", applicantName),
-                    buildInfoTile("Applicant Email", applicantEmail),
+                    buildInfoTile(
+                      "Submitted By",
+                      applicantName,
+                      canCopy: false,
+                    ),
+
+                    buildInfoTile(
+                      "Applicant Email",
+                      applicantEmail,
+                    ),
                   ],
                 ),
               ),
@@ -866,10 +945,26 @@ class _OrganisationApplicationDetailPageState
                       "Registration No",
                       application!['registration_number'],
                     ),
-                    buildInfoTile("Email", application!['email']),
-                    buildInfoTile("Phone", application!['phone']),
-                    buildInfoTile("Website", application!['website']),
-                    buildInfoTile("Address", application!['address']),
+
+                    buildInfoTile(
+                      "Email",
+                      application!['email'],
+                    ),
+
+                    buildInfoTile(
+                      "Phone",
+                      application!['phone'],
+                    ),
+
+                    buildInfoTile(
+                      "Website",
+                      application!['website'],
+                    ),
+
+                    buildInfoTile(
+                      "Address",
+                      application!['address'],
+                    ),
                   ],
                 ),
               ),
@@ -878,7 +973,7 @@ class _OrganisationApplicationDetailPageState
 
               buildSectionCard(
                 title: "Organisation Description",
-                child: Text(
+                child: SelectableText(
                   application!['description'] ?? "-",
                   style: const TextStyle(fontSize: 15, height: 1.5),
                 ),
@@ -914,7 +1009,7 @@ class _OrganisationApplicationDetailPageState
                 const SizedBox(height: 18),
                 buildSectionCard(
                   title: "Rejection Reason",
-                  child: Text(
+                  child: SelectableText(
                     adminRemark.toString(),
                     style: const TextStyle(
                       fontSize: 15,

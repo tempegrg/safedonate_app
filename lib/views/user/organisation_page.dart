@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/app_theme.dart';
 import '../../services/organisation_service.dart';
+import 'package:flutter/services.dart';
 
 class OrganisationPage extends StatefulWidget {
   const OrganisationPage({super.key});
@@ -330,7 +331,7 @@ class _OrganisationPageState extends State<OrganisationPage> {
                         color: Colors.grey.shade300,
                       ),
                     ),
-                    child: Text(
+                    child: SelectableText(
                       description,
                       style: const TextStyle(
                         fontSize: 14.5,
@@ -391,8 +392,12 @@ class _OrganisationPageState extends State<OrganisationPage> {
   Widget buildDetailTile(
     IconData icon,
     String title,
-    String value,
-  ) {
+    String value, {
+    bool canCopy = true,
+  }) {
+    final displayValue =
+        value.trim().isEmpty ? "Not Provided" : value;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -419,7 +424,9 @@ class _OrganisationPageState extends State<OrganisationPage> {
               size: 22,
             ),
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,9 +439,11 @@ class _OrganisationPageState extends State<OrganisationPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+
                 const SizedBox(height: 4),
-                Text(
-                  value.isEmpty ? "Not Provided" : value,
+
+                SelectableText(
+                  displayValue,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -445,6 +454,32 @@ class _OrganisationPageState extends State<OrganisationPage> {
               ],
             ),
           ),
+
+          if (canCopy)
+            IconButton(
+              tooltip: "Copy",
+              icon: const Icon(
+                Icons.copy_rounded,
+                size: 18,
+                color: Colors.grey,
+              ),
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: displayValue),
+                );
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Copied to clipboard"),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

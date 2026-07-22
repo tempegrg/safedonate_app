@@ -146,7 +146,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
     );
   }
 
-  // =========================================
+  // ============================z=============
   // HANDLE SCANNED QR
   // =========================================
   Future<void> handleScannedCode(

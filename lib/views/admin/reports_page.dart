@@ -44,6 +44,10 @@ class _ReportsPageState extends State<ReportsPage> {
         reportData?['verified_logs']?.toString() ?? "0";
     final warningLogs =
         reportData?['warning_logs']?.toString() ?? "0";
+    final dangerLogs =
+      reportData?['danger_logs']?.toString() ?? "0";
+    final unknownLogs =
+        reportData?['unknown_logs']?.toString() ?? "0";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -188,7 +192,7 @@ class _ReportsPageState extends State<ReportsPage> {
                       subtitle:
                           "Websites successfully matched with verified organisations.",
                     ),
-
+                    /*
                     buildReportCard(
                       title: "Warning Websites",
                       value: warningLogs,
@@ -196,6 +200,24 @@ class _ReportsPageState extends State<ReportsPage> {
                       color: Colors.red,
                       subtitle:
                           "Websites flagged as suspicious or not verified.",
+                    ),*/
+
+                    buildReportCard(
+                      title: "Dangerous Websites",
+                      value: dangerLogs,
+                      icon: Icons.dangerous,
+                      color: Colors.red.shade800,
+                      subtitle:
+                          "Websites detected as malicious by VirusTotal.",
+                    ),
+
+                    buildReportCard(
+                      title: "Unknown Websites",
+                      value: unknownLogs,
+                      icon: Icons.help_outline_rounded,
+                      color: Colors.blueGrey,
+                      subtitle:
+                          "Websites that are not registered and have insufficient reputation information.",
                     ),
                   ],
                 ),

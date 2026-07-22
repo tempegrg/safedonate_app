@@ -28,10 +28,12 @@ class OrganisationApplicationService {
       final prefs = await SharedPreferences.getInstance();
       final int? userId = prefs.getInt('user_id');
 
-      var request = http.MultipartRequest(
+      final request = http.MultipartRequest(
         "POST",
         Uri.parse("$baseUrl/organisation-applications"),
       );
+
+      request.headers["Accept"] = "application/json";
 
       request.fields["organisation_name"] = organisationName;
       request.fields["organisation_type"] = organisationType;
@@ -61,6 +63,10 @@ class OrganisationApplicationService {
       );
 
       if (supportingDocument != null) {
+        print(
+          "Supporting document size: ${supportingDocument.lengthSync()} bytes",
+        );
+
         request.files.add(
           await http.MultipartFile.fromPath(
             "supporting_document",
@@ -69,19 +75,34 @@ class OrganisationApplicationService {
         );
       }
 
-      var response = await request.send();
-      var responseBody = await response.stream.bytesToString();
+      print("========== SUBMIT APPLICATION ==========");
+      print("POST URL : ${request.url}");
+      print("FIELDS   : ${request.fields}");
+      print("HEADERS  : ${request.headers}");
+      print("LOGO     : ${logo.path}");
+      print("CERT     : ${certificate.path}");
+      print("SUPPORT  : ${supportingDocument?.path}");
 
-      print("APPLICATION SUBMIT STATUS: ${response.statusCode}");
-      print("APPLICATION SUBMIT BODY: $responseBody");
+      final streamedResponse = await request.send();
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      print("STATUS CODE : ${streamedResponse.statusCode}");
+      print("RESPONSE HEADERS : ${streamedResponse.headers}");
+
+      final responseBody =
+          await streamedResponse.stream.bytesToString();
+
+      print("RESPONSE BODY:");
+      print(responseBody);
+
+      if (streamedResponse.statusCode == 200 ||
+          streamedResponse.statusCode == 201) {
         return jsonDecode(responseBody);
       }
 
       return null;
     } catch (e) {
-      print("submitApplication error: $e");
+      print("SUBMIT APPLICATION ERROR:");
+      print(e);
       return null;
     }
   }
@@ -111,22 +132,14 @@ class OrganisationApplicationService {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
 
-        print("DECODED RESPONSE: $decoded");
-        print("DECODED TYPE: ${decoded.runtimeType}");
-
-        if (decoded is Map<String, dynamic>) {
-          print("APPLICATION FIELD: ${decoded["application"]}");
-
-          if (decoded["application"] != null) {
-            final app =
-                Map<String, dynamic>.from(decoded["application"]);
-            print("RETURNING APPLICATION MAP: $app");
-            return app;
-          }
+        if (decoded is Map<String, dynamic> &&
+            decoded["application"] != null) {
+          return Map<String, dynamic>.from(
+            decoded["application"],
+          );
         }
       }
 
-      print("RETURNING NULL FROM getMyApplication()");
       return null;
     } catch (e) {
       print("getMyApplication error: $e");
