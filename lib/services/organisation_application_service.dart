@@ -49,29 +49,16 @@ class OrganisationApplicationService {
       }
 
       request.files.add(
-        await http.MultipartFile.fromPath(
-          "logo",
-          logo.path,
-        ),
+        await _createMultipartFile("logo", logo),
       );
 
       request.files.add(
-        await http.MultipartFile.fromPath(
-          "certificate",
-          certificate.path,
-        ),
+        await _createMultipartFile("certificate", certificate),
       );
 
       if (supportingDocument != null) {
-        print(
-          "Supporting document size: ${supportingDocument.lengthSync()} bytes",
-        );
-
         request.files.add(
-          await http.MultipartFile.fromPath(
-            "supporting_document",
-            supportingDocument.path,
-          ),
+          await _createMultipartFile("supporting_document", supportingDocument),
         );
       }
 
@@ -104,6 +91,24 @@ class OrganisationApplicationService {
       print("SUBMIT APPLICATION ERROR:");
       print(e);
       return null;
+    }
+  }
+
+  static Future<http.MultipartFile> _createMultipartFile(
+      String field, File file) async {
+    try {
+      return await http.MultipartFile.fromPath(field, file.path);
+    } catch (e) {
+      final response = await http.get(Uri.parse(file.path));
+      String filename = file.path.split('/').last;
+      if (!filename.contains('.')) {
+        filename = '$filename.png';
+      }
+      return http.MultipartFile.fromBytes(
+        field,
+        response.bodyBytes,
+        filename: filename,
+      );
     }
   }
 
