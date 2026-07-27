@@ -47,7 +47,7 @@ class _AdminLogsPageState extends State<AdminLogsPage> {
         return Colors.green;
       case 'warning':
       case 'danger':
-        return Colors.orange;
+        return Colors.red;
       default:
         return Colors.grey.shade600;
     }
