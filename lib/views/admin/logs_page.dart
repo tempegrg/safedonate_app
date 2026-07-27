@@ -42,21 +42,39 @@ class _AdminLogsPageState extends State<AdminLogsPage> {
   // HELPERS
   // =========================================
   Color getStatusColor(String result) {
-    return result.toLowerCase() == 'verified'
-        ? Colors.green
-        : Colors.orange;
+    switch (result.toLowerCase()) {
+      case 'verified':
+        return Colors.green;
+      case 'warning':
+      case 'danger':
+        return Colors.orange;
+      default:
+        return Colors.grey.shade600;
+    }
   }
 
   IconData getStatusIcon(String result) {
-    return result.toLowerCase() == 'verified'
-        ? Icons.verified_rounded
-        : Icons.warning_amber_rounded;
+    switch (result.toLowerCase()) {
+      case 'verified':
+        return Icons.verified_rounded;
+      case 'warning':
+      case 'danger':
+        return Icons.warning_amber_rounded;
+      default:
+        return Icons.help_outline_rounded;
+    }
   }
 
   String getStatusText(String result) {
-    return result.toLowerCase() == 'verified'
-        ? "Verified Website"
-        : "Warning Website";
+    switch (result.toLowerCase()) {
+      case 'verified':
+        return "Verified Website";
+      case 'warning':
+      case 'danger':
+        return "Warning: Suspicious";
+      default:
+        return "Unknown Security";
+    }
   }
 
   String formatDate(dynamic value) {
