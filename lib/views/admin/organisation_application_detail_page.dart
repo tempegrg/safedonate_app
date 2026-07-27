@@ -8,6 +8,7 @@ import '../../config/app_theme.dart';
 import '../../services/organisation_application_admin_service.dart';
 
 import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 
 class OrganisationApplicationDetailPage extends StatefulWidget {
@@ -25,7 +26,10 @@ class OrganisationApplicationDetailPage extends StatefulWidget {
 
 class _OrganisationApplicationDetailPageState
     extends State<OrganisationApplicationDetailPage> {
+
   bool isLoading = true;
+  bool isPickingLogo = false;
+
   Map<String, dynamic>? application;
 
   @override
@@ -110,41 +114,60 @@ class _OrganisationApplicationDetailPageState
     return null;
   }
 
-  // =========================================
-  // PICK & CROP LOGO
-  // =========================================
   Future<File?> pickAndCropLogo() async {
+  if (isPickingLogo) return null;
 
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png'],
-      allowMultiple: false,
+  isPickingLogo = true;
+
+  try {
+    final picker = ImagePicker();
+
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 100,
     );
 
-    if (result == null || result.files.single.path == null) {
-      return null;
-    }
+    if (image == null) return null;
 
-    final croppedImage = await ImageCropper().cropImage(
-      sourcePath: result.files.single.path!,
-      compressQuality: 90,
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: image.path,
+      compressFormat: ImageCompressFormat.png,
+      compressQuality: 100,
       uiSettings: [
         AndroidUiSettings(
-          toolbarTitle: 'Crop Logo',
+          toolbarTitle: 'Crop Organisation Logo',
           toolbarColor: AppTheme.primaryColor,
           toolbarWidgetColor: Colors.white,
-          hideBottomControls: false,
+          backgroundColor: Colors.white,
+          activeControlsWidgetColor: AppTheme.primaryColor,
           lockAspectRatio: false,
+          initAspectRatio: CropAspectRatioPreset.square,
+          hideBottomControls: false,
+        ),
+        IOSUiSettings(
+          title: 'Crop Organisation Logo',
+          aspectRatioLockEnabled: false,
         ),
       ],
     );
 
-    if (croppedImage == null) {
-      return null;
-    }
+    if (croppedFile == null) return null;
 
-    return File(croppedImage.path);
+    return File(croppedFile.path);
+  } catch (e) {
+    if (!mounted) return null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Failed to pick logo: $e"),
+      ),
+    );
+
+    return null;
+  } finally {
+    isPickingLogo = false;
   }
+}
 
   // =========================================
   // APPROVE
@@ -364,13 +387,38 @@ class _OrganisationApplicationDetailPageState
                     Icon(icon, color: iconColor),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        file != null
-                            ? file.path.split('/').last
-                            : placeholder,
-                        style: const TextStyle(fontSize: 14),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        children: [
+                          if (file != null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                file,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          else
+                            Icon(
+                              icon,
+                              color: iconColor,
+                              size: 40,
+                            ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: Text(
+                              file != null
+                                  ? file.path.split('/').last
+                                  : placeholder,
+                              style: const TextStyle(fontSize: 14),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     if (file != null)
