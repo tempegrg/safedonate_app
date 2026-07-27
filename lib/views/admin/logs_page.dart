@@ -71,7 +71,7 @@ class _AdminLogsPageState extends State<AdminLogsPage> {
         return "Verified Website";
       case 'warning':
       case 'danger':
-        return "Warning: Suspicious";
+        return "Dangerous";
       default:
         return "Unknown Security";
     }
