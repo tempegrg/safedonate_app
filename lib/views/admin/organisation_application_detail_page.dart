@@ -148,6 +148,9 @@ class _OrganisationApplicationDetailPageState
           title: 'Crop Organisation Logo',
           aspectRatioLockEnabled: false,
         ),
+        WebUiSettings(
+          context: context,
+        ),
       ],
     );
 

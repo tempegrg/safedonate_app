@@ -95,6 +95,9 @@ class _RegisterOrganisationPageState
             title: 'Crop Organisation Logo',
             aspectRatioLockEnabled: false,
           ),
+          WebUiSettings(
+            context: context,
+          ),
         ],
       );
 
