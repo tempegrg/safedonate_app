@@ -609,7 +609,7 @@ class _OrganisationApplicationDetailPageState
 
     if (result != true) return;
 
-    final success =
+    final resultData =
         await OrganisationApplicationAdminService.updateApplication(
       id: widget.applicationId,
       organisationName: orgNameController.text.trim(),
@@ -627,13 +627,22 @@ class _OrganisationApplicationDetailPageState
 
     if (!mounted) return;
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Application updated successfully"),
-        ),
-      );
-      await loadApplication();
+    if (resultData != null) {
+      if (resultData["error"] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(resultData["message"] ?? "Failed to update application"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Application updated successfully"),
+          ),
+        );
+        await loadApplication();
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

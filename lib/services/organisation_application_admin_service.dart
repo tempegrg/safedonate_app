@@ -93,7 +93,7 @@ class OrganisationApplicationAdminService {
   // =========================================
   // UPDATE APPLICATION WITH FILES
   // =========================================
-  static Future<bool> updateApplication({
+  static Future<Map<String, dynamic>?> updateApplication({
     required int id,
     required String organisationName,
     required String organisationType,
@@ -151,10 +151,20 @@ class OrganisationApplicationAdminService {
       print("UPDATE APPLICATION STATUS: ${response.statusCode}");
       print("UPDATE APPLICATION BODY: ${response.body}");
 
-      return response.statusCode == 200;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+         return jsonDecode(response.body);
+      } else if (response.statusCode == 422) {
+         final decoded = jsonDecode(response.body);
+         return {
+           "error": true,
+           "message": decoded["message"] ?? "Validation failed"
+         };
+      }
+
+      return null;
     } catch (e) {
       print("UPDATE APPLICATION ERROR: $e");
-      return false;
+      return null;
     }
   }
 

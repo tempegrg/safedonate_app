@@ -84,6 +84,12 @@ class OrganisationApplicationService {
       if (streamedResponse.statusCode == 200 ||
           streamedResponse.statusCode == 201) {
         return jsonDecode(responseBody);
+      } else if (streamedResponse.statusCode == 422) {
+        final decoded = jsonDecode(responseBody);
+        return {
+          "error": true,
+          "message": decoded["message"] ?? "Validation failed"
+        };
       }
 
       return null;

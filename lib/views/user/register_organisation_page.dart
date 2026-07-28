@@ -222,12 +222,16 @@ class _RegisterOrganisationPageState
     });
 
     if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Application submitted successfully"),
-        ),
-      );
-      Navigator.pop(context, true);
+      if (result["error"] == true) {
+        showMessage(result["message"] ?? "Submission failed.");
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Application submitted successfully"),
+          ),
+        );
+        Navigator.pop(context, true);
+      }
     } else {
       showMessage("Submission failed.");
     }
