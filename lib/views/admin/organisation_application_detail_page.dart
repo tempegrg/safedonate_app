@@ -150,6 +150,7 @@ class _OrganisationApplicationDetailPageState
         ),
         WebUiSettings(
           context: context,
+          presentStyle: WebPresentStyle.page,
         ),
       ],
     );

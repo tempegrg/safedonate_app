@@ -97,6 +97,7 @@ class _RegisterOrganisationPageState
           ),
           WebUiSettings(
             context: context,
+            presentStyle: WebPresentStyle.page,
           ),
         ],
       );
