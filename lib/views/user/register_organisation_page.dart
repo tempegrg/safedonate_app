@@ -126,8 +126,9 @@ class _RegisterOrganisationPageState
 
     if (result != null && result.files.single.path != null) {
       final path = result.files.single.path!;
+      final name = result.files.single.name;
 
-      if (!isPdfFile(path)) {
+      if (!isPdfFile(name)) {
         showPdfOnlyWarning();
         return;
       }
@@ -150,8 +151,9 @@ class _RegisterOrganisationPageState
 
     if (result != null && result.files.single.path != null) {
       final path = result.files.single.path!;
+      final name = result.files.single.name;
 
-      if (!isPdfFile(path)) {
+      if (!isPdfFile(name)) {
         showPdfOnlyWarning();
         return;
       }
@@ -181,18 +183,6 @@ class _RegisterOrganisationPageState
       showMessage(
         "Please upload the organisation logo and registration certificate.",
       );
-      return;
-    }
-
-    if (certificateFile != null &&
-        !isPdfFile(certificateFile!.path)) {
-      showPdfOnlyWarning();
-      return;
-    }
-
-    if (supportingDocumentFile != null &&
-        !isPdfFile(supportingDocumentFile!.path)) {
-      showPdfOnlyWarning();
       return;
     }
 

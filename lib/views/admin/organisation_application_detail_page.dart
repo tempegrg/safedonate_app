@@ -102,8 +102,9 @@ class _OrganisationApplicationDetailPageState
 
     if (result != null && result.files.single.path != null) {
       final path = result.files.single.path!;
+      final name = result.files.single.name;
 
-      if (pdfOnly && !isPdfFile(path)) {
+      if (pdfOnly && !isPdfFile(name)) {
         showPdfOnlyWarning();
         return null;
       }

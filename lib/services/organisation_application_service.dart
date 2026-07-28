@@ -108,7 +108,11 @@ class OrganisationApplicationService {
       final response = await http.get(Uri.parse(file.path));
       String filename = file.path.split('/').last;
       if (!filename.contains('.')) {
-        filename = '$filename.png';
+        if (field == 'certificate' || field == 'supporting_document') {
+          filename = '$filename.pdf';
+        } else {
+          filename = '$filename.png';
+        }
       }
       return http.MultipartFile.fromBytes(
         field,
