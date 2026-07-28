@@ -189,7 +189,7 @@ class _MyApplicationStatusPageState
     Color textColor;
     IconData icon;
 
-    if (lower == 'approved') {
+    if (lower == 'approved' || lower == 'verified') {
       bgColor = Colors.green.shade100;
       textColor = Colors.green.shade800;
       icon = Icons.check_circle;
