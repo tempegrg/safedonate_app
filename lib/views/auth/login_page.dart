@@ -161,6 +161,28 @@ class _LoginPageState
   // =========================================
 
   Future<void> biometricLogin() async {
+    final prefs =
+        await SharedPreferences
+            .getInstance();
+
+    bool hasLoggedInBefore =
+        prefs.getBool(
+              'hasLoggedInBefore',
+            ) ??
+            false;
+
+    if (!hasLoggedInBefore) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Please login once before using biometric login",
+          ),
+        ),
+      );
+      return;
+    }
+
     final bool available =
         await BiometricService
             .isBiometricAvailable();
@@ -193,30 +215,8 @@ class _LoginPageState
       return;
     }
 
-    final prefs =
-        await SharedPreferences
-            .getInstance();
-
-    bool hasLoggedInBefore =
-        prefs.getBool(
-              'hasLoggedInBefore',
-            ) ??
-            false;
-
     String role =
         prefs.getString('role') ?? '';
-
-    if (!hasLoggedInBefore) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Please login once before using biometric login",
-          ),
-        ),
-      );
-      return;
-    }
 
     ScaffoldMessenger.of(context)
         .showSnackBar(
