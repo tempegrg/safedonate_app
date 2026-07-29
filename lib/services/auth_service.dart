@@ -38,7 +38,7 @@ class AuthService {
 
         print("AUTH 4 - SharedPreferences loaded");
 
-        await prefs.setBool('isLoggedIn', true);
+        await prefs.setBool('is_logged_in', true);
         await prefs.setBool('hasLoggedInBefore', true);
 
         print("AUTH 5 - Login status saved");
@@ -122,11 +122,8 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.remove('token');
-    await prefs.remove('user_id');
-    await prefs.remove('name');
-    await prefs.remove('email');
-    await prefs.remove('role');
     await prefs.remove('is_logged_in');
+    await prefs.remove('isLoggedIn');
     await prefs.remove('last_active_time');
   }
 }
